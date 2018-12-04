@@ -24,7 +24,7 @@ Default values are set for all properties of the tracker depending on the above 
 Their values can be customized further before calling init():
     interp_factor: linear interpolation factor for adaptation
     sigma: gaussian kernel bandwidth
-    lambda: regularization
+    _lambda: regularization
     cell_size: HOG cell size
     padding: area surrounding the target, relative to its size
     output_sigma_factor: bandwidth of gaussian target
@@ -108,7 +108,7 @@ using namespace std;
 KCFTracker::KCFTracker(bool hog, bool fixed_window, bool multiscale, bool lab)
 {
     // Parameters equal in all cases
-    lambda = 0.0001;
+    _lambda = 0.0001;
     padding = 2.5; 
     //output_sigma_factor = 0.1;
     output_sigma_factor = 0.125;
@@ -151,8 +151,9 @@ KCFTracker::~KCFTracker()
 }
 
 // Initialize tracker 
-void KCFTracker::init(const cv::Rect &roi, cv::UMat image)
+void KCFTracker::init(const cv::Rect &roi, cv::Mat orig_image)
 {
+    cv::UMat image = orig_image.getUMat( cv::ACCESS_READ );
     //VASurfaceID vaSurfaceID;
     VAStatus status;
   
@@ -183,8 +184,9 @@ void KCFTracker::init(const cv::Rect &roi, cv::UMat image)
     
  }
 // Update position based on the new frame
-cv::Rect KCFTracker::update(cv::UMat image)
+cv::Rect KCFTracker::update(cv::Mat orig_image)
 {
+    cv::UMat image = orig_image.getUMat( cv::ACCESS_READ );
     //VASurfaceID vaSurfaceID;
     VAStatus status;
   
@@ -321,7 +323,7 @@ void KCFTracker::train(cv::Mat x, float train_interp_factor)
     tmStart = std::chrono::high_resolution_clock::now();
 
     cv::Mat k = gaussianCorrelation_gpu(x, x);
-    cv::Mat alphaf = complexDivision(_prob, (fftd(k) + lambda));
+    cv::Mat alphaf = complexDivision(_prob, (fftd(k) + _lambda));
     
     _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor) * x;
     _alphaf = (1 - train_interp_factor) * _alphaf + (train_interp_factor) * alphaf;
@@ -329,7 +331,7 @@ void KCFTracker::train(cv::Mat x, float train_interp_factor)
 
     /*cv::Mat kf = fftd(gaussianCorrelation(x, x));
     cv::Mat num = complexMultiplication(kf, _prob);
-    cv::Mat den = complexMultiplication(kf, kf + lambda);
+    cv::Mat den = complexMultiplication(kf, kf + _lambda);
     
     _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor) * x;
     _num = (1 - train_interp_factor) * _num + (train_interp_factor) * num;

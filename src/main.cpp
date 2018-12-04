@@ -95,9 +95,9 @@ int main(int argc, char* argv[])
 	if (files.size()!=0)
 	{
             Mat orig_image = imread(files[0]);
-            UMat gpu_image= orig_image.getUMat( ACCESS_READ );
+            // UMat gpu_image= orig_image.getUMat( ACCESS_READ );
 	    cv::Rect roi = GetRoi();
-	    tracking->init(roi, gpu_image);
+	    tracking->init(roi, orig_image);
 	
             rectangle(orig_image, Point(roi.x, roi.y), Point(roi.x + roi.width, roi.y + roi.height), Scalar(0, 255, 255), 1, 8);
 	    //cv::namedWindow("KCF_GPU", cv::WINDOW_AUTOSIZE);
@@ -108,8 +108,8 @@ int main(int argc, char* argv[])
 	    {
                 cout<<*it<<endl;
                 orig_image= imread(*it);
-                gpu_image = orig_image.getUMat( ACCESS_READ );
-		cv::Rect res= tracking->update(gpu_image);
+                // gpu_image = orig_image.getUMat( ACCESS_READ );
+		cv::Rect res= tracking->update(orig_image);
                 //cout<<res.x <<" "<<res.y<<" "<<res.width<<" "<<res.height<<endl;
                 rectangle(orig_image, Point(res.x, res.y), Point(res.x + res.width, res.y + res.height), Scalar(0, 255, 255), 1, 8);
 		cv::namedWindow("KCF_GPU", cv::WINDOW_AUTOSIZE);
